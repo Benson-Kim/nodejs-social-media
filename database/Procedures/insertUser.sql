@@ -1,5 +1,5 @@
 -- Procedure to insert a user into the database
-CREATE PROCEDURE users.PROC_InsertUser(
+CREATE OR ALTER PROCEDURE users.PROC_InsertUser(
     @firstname VARCHAR(50),
     @lastname VARCHAR(50),
     @username VARCHAR(50),

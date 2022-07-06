@@ -62,7 +62,7 @@ exports.createComment = async (req, res) => {
       .execute("Posts.checkUserComment", function (error, results) {
         if (error) {
           res.status(500).send(error.message);
-        } else if (results.recordset.length > 0) {
+        } else if (results) {
           res.status(401).json({
             status: 401,
             success: false,
