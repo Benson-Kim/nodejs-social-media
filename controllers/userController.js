@@ -1,8 +1,6 @@
 const poolPromise = require("../database/config");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const jwtoken =
-  "d6518fefb2dd30b6309b705e17af5e89ac37ad2e3bce16d7c6658e2d5b44d2a0804cbb";
 
 exports.signup = async (req, res) => {
   const { firstname, lastname, email, username, telephone, password } =
@@ -15,25 +13,27 @@ exports.signup = async (req, res) => {
     //   Todo
     //   check if all  details are available
     //   check if email/username/telephone exists before adding the user
-    pool
-      .request()
-      .input("firstname", firstname)
-      .input("lastname", lastname)
-      .input("email", email)
-      .input("username", username)
-      .input("telephone", telephone)
-      .input("password", hashPass)
-      .execute("users.PROC_InsertUser", (error, result) => {
-        if (error) {
-          res.status(500).send(error.message);
-        } else {
-          res.status(201).json({
-            user: { firstname, lastname, email, username, telephone },
-            message: `${username} has been added successfully`,
-          });
-        }
-      });
+    const request = await pool.request();
+    request.input("firstname", firstname);
+    request.input("lastname", lastname);
+    request.input("email", email);
+    request.input("username", username);
+    request.input("telephone", telephone);
+    request.input("password", hashPass);
+    const result = await request.execute("users.PROC_InsertUser");
+
+    console.log(process.env.JWTKEY);
+    const token = await jwt.sign({ email }, process.env.JWTKEY, {
+      expiresIn: "24h",
+    });
+
+    res.status(201).json({
+      user: { firstname, lastname, email, username, telephone },
+      message: `${username} has been added successfully`,
+      token,
+    });
   } catch (error) {
+    console.log(error);
     res.status(500).json(error);
   }
 };
@@ -51,17 +51,24 @@ exports.signin = async (req, res) => {
         } else {
           const user = result.recordset[0];
           // Generate token
-          //   const token = require("crypto").randomBytes(35).toString("hex");
           console.log(user);
           bcrypt
             .compare(password, user.password)
-            .then(function (result, error) {
+            .then(async function (result, error) {
               if (result) {
+                const token = await jwt.sign(
+                  { email: user.email },
+                  process.env.JWTKEY,
+                  {
+                    expiresIn: "24h",
+                  }
+                );
                 res.status(201).json({
                   status: 201,
                   success: true,
                   message: `logged in successfully`,
-                  results: [email, password],
+                  results: user,
+                  token,
                 });
               } else
                 res.status(401).json({

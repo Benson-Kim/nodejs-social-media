@@ -4,6 +4,7 @@ const {} = require("../");
 
 exports.createPost = async (req, res) => {
   const { content, userId, createdAt } = req.body;
+  console.log(req.user);
   try {
     const pool = await poolPromise();
     pool
@@ -52,6 +53,9 @@ exports.getAllPosts = async (req, res) => {
 };
 
 exports.createComment = async (req, res) => {
+  // todo
+  // check if user exists
+  // check if post exists
   try {
     const { userId, postId, content, createdAt } = req.body;
     const pool = await poolPromise();
@@ -60,14 +64,14 @@ exports.createComment = async (req, res) => {
       .input("userId", userId)
       .input("postId", postId)
       .execute("Posts.checkUserComment", function (error, results) {
+        console.log(results.recordsets);
         if (error) {
           res.status(500).send(error.message);
-        } else if (results) {
+        } else if (results.recordset.length > 0) {
           res.status(401).json({
             status: 401,
             success: false,
             message: `The user already has a comment on this post`,
-            data: results.recordset,
           });
         } else {
           pool
@@ -82,7 +86,7 @@ exports.createComment = async (req, res) => {
                 return res.status(201).json({
                   status: 201,
                   success: true,
-                  message: `user with id ${userId} has commented on post with id ${postId} successfully`,
+                  message: `commented successfully`,
                   comment: { userId, postId, content, createdAt },
                 });
               }
