@@ -17,7 +17,6 @@ app.set("view engine", "hbs");
 // Define routes
 app.use("/", require("./routes/pages"));
 
-app.use("/auth", require("./routes/auth"));
 app.use("/user", require("./routes/userRoutes"));
 app.use("/posts", require("./routes/postRoutes"));
 
