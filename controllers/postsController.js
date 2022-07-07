@@ -1,103 +1,81 @@
-const poolPromise = require("../database/config");
-
-const {} = require("../");
+const { exec } = require("../utils/db");
 
 exports.createPost = async (req, res) => {
-  const { content, userId, createdAt } = req.body;
-  console.log(req.user);
+  const { content, userId } = req.body;
   try {
-    const pool = await poolPromise();
-    pool
-      .request()
-      .input("content", content)
-      .input("userId", userId)
-      .execute("Posts.PROC_InsertPost", (error, result) => {
-        if (error) {
-          res.status(500).send(error.message);
-        } else {
-          return res.status(201).json({
-            user: { userId, content, createdAt },
-            message: `A post has been created a successfully`,
-          });
-        }
-      });
+    await exec("Posts.PROC_InsertPost", {
+      content,
+      userId,
+    });
+    return res.status(201).json({
+      post: { userId, content },
+      message: `A post has been created a successfully`,
+    });
   } catch (error) {
+    console.log(error.message);
     res.status(500).json({
       status: 500,
       success: false,
-      message: error,
+      message: error.message,
     });
   }
 };
 
 exports.getAllPosts = async (req, res) => {
   try {
-    const pool = await poolPromise();
-    pool.request().execute("Posts.PROC_GetPosts", function (err, results) {
-      if (err) {
-        res.status(500).send(error.message);
-      } else {
-        return res.status(201).json({
-          message: `Posts retrieved successfully`,
-          results: results,
-        });
-      }
+    const results = await exec("Posts.PROC_GetPosts");
+
+    return res.status(201).json({
+      message: `Posts retrieved successfully`,
+      posts: results.recordset,
     });
   } catch (error) {
+    console.log(error.message);
     res.status(500).json({
       status: 500,
       success: false,
-      message: error,
+      message: error.message,
     });
   }
 };
 
 exports.createComment = async (req, res) => {
-  // todo
-  // check if user exists
-  // check if post exists
   try {
-    const { userId, postId, content, createdAt } = req.body;
-    const pool = await poolPromise();
-    pool
-      .request()
-      .input("userId", userId)
-      .input("postId", postId)
-      .execute("Posts.checkUserComment", function (error, results) {
-        console.log(results.recordsets);
-        if (error) {
-          res.status(500).send(error.message);
-        } else if (results.recordset.length > 0) {
-          res.status(401).json({
-            status: 401,
-            success: false,
-            message: `The user already has a comment on this post`,
-          });
-        } else {
-          pool
-            .request()
-            .input("userId", userId)
-            .input("postId", postId)
-            .input("content", content)
-            .execute("Posts.PROC_InsertComment", function (error, results) {
-              if (error) {
-                res.status(500).send(error.message);
-              } else {
-                return res.status(201).json({
-                  status: 201,
-                  success: true,
-                  message: `commented successfully`,
-                  comment: { userId, postId, content, createdAt },
-                });
-              }
-            });
-        }
+    const { userId, postId, content } = req.body;
+    // todo
+    // check if user exists
+    // check if post exists
+
+    const commentResult = await exec("Posts.checkUserComment", {
+      userId,
+      postId,
+    });
+
+    if (commentResult.recordset.length > 0) {
+      return res.status(401).json({
+        status: 401,
+        success: false,
+        message: `The user already has a comment on this post`,
       });
+    }
+
+    await exec("Posts.PROC_InsertComment", {
+      userId,
+      postId,
+      content,
+    });
+
+    return res.status(201).json({
+      status: 201,
+      success: true,
+      message: `commented successfully`,
+    });
   } catch (error) {
+    console.log(error.message);
     res.status(500).json({
       status: 500,
       success: false,
-      message: error,
+      message: error.message,
     });
   }
 };
@@ -109,7 +87,7 @@ exports.createReply = async (req, res) => {
     res.status(500).json({
       status: 500,
       success: false,
-      message: error,
+      message: error.message,
     });
   }
 };

@@ -8,8 +8,8 @@ AS
 BEGIN
     SELECT *
     FROM Posts.Comments
-    WHERE userId= @userId AND postId=@postId
+    WHERE userId=@userId AND postId=@postId
 END
 GO
 
--- EXECUTE Posts.checkUserComment 1,1
+EXECUTE Posts.checkUserComment 5,20
