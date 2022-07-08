@@ -20,10 +20,5 @@ app.use("/", require("./routes/pages"));
 
 app.use("/user", require("./routes/userRoutes"));
 app.use("/posts", require("./routes/postRoutes"));
-app.get("/", (req, res) => {
-  res.json({
-    message: "This is home",
-  });
-});
 
 app.listen(PORT, () => console.log(`Listening on port ${PORT}`));

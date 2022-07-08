@@ -31,9 +31,9 @@ exports.signup = async (req, res) => {
       password: hashPass,
     });
 
-    const token = jwt.sign({ email }, process.env.JWTKEY, {
-      expiresIn: "24h",
-    });
+    // const token = jwt.sign({ email }, process.env.JWTKEY, {
+    //   expiresIn: "24h",
+    // });
 
     return res.status(201).json({
       status: 201,
